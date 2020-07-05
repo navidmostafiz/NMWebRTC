@@ -1,0 +1,9 @@
+#!/bin/zsh
+
+# GIT ADD COMMIT AND PUSH
+echo "*** GIT ADD COMMIT AND PUSH ***";
+git status;
+git add .;
+git commit -a -m "$1";
+git push;
+exit 1;
