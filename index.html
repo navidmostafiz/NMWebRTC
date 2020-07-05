@@ -25,33 +25,21 @@
   </br>
   <video class="fun" id="remote_video_id" width="100px" autoplay></video>
   </br>
-  <button class="fun" id="conn_button" onclick="callPEER()">Connect</button>
+  <button class="fun" id="conn_button">Connect</button>
   </br>
-  <button class="fun" id="call_button" onclick="callPEER()">Call</button>
+  <button class="fun" id="call_button">Call</button>
   </br>
   <script src="https://unpkg.com/peerjs@1.3.0/dist/peerjs.min.js"></script>
   <script>
     //init setup
     var username = "";
     var peername = "";
-    // var token = "";
-
+    var peer_id = ""
     while (username == "" || username == null) {
       getUserName();
     }
-
     while (peername == "" || peername == null) {
       getPeerName();
-    }
-
-    // while (token == "" || token == null) {
-    //   getToken();
-    // }
-    //Get peername
-    function getPeerName() {
-      peername = prompt("peername?");
-      // alert(username);
-      console.log("LOG: peername=" + peername);
     }
     //Get username
     function getUserName() {
@@ -59,15 +47,12 @@
       // alert(username);
       console.log("LOG: username=" + username);
     }
-    //Get access token
-    // function getToken() {
-    //   token = prompt("access token?");
-    //   // alert(token);
-    //   console.log("LOG: token=" + token);
-    // }
-
-    //WebRTC connection
-
+    //Get peername
+    function getPeerName() {
+      peername = prompt("peername?");
+      // alert(username);
+      console.log("LOG: peername=" + peername);
+    }
     //GET LOCAL VIDEO
     function getLocalVideo(callbacks) {
       navigator.getUserMedia =
@@ -80,13 +65,13 @@
         video: true
       }, callbacks.success, callbacks.error);
     }
-
+    //GET REMOTE VIDEO
     function recStream(stream, elemID) {
       var video = document.getElementById(elemID);
       video.srcObject = stream;
       window.peer_stream = stream;
     }
-
+    //CALL THE getLocalVideo() function with callbacks
     getLocalVideo({
       success: function (stream) {
         window.localstream = stream;
@@ -97,31 +82,77 @@
         console.log(err);
       }
     });
-
     //+++++++++++++++ PEER SOCKET
+    //SIGNAL SERVER
     const peer = new Peer(username, {
       host: 'localhost',
       port: 9000,
       path: '/myapp'
     });
 
+    //OPENED CONNECTION TO WEBRTC SIGNAL SERVER
     peer.on('open', function (id) {
-      console.log('LOG: local PeerID=' + id);
-      document.getElementById("display_id").innerHTML = "local PeerID=  " + id;
+      console.log('LOG: [EVENT=open] local PeerID=' + id);
+      document.getElementById("display_id").innerHTML = "local PeerID= " + id;
     });
 
+    //CONNECTION REQUEST CAME FROM peer_id
     peer.on('connection', function (conn) {
       peer_id = conn.peer;
-      document.getElementById("display_id").innerHTML = "remote peer_id=  " + peer_id;
-
-
-      // conn.on('data', function (data) {
-      //   // Will print 'hi!'
-      //   console.log(data);
-      // });
+      console.log("LOG: [EVENT=connection] connection request came from remote peer_id=" + peer_id);
+      document.getElementById("peer_id").innerHTML = "remote peer_id= " + peer_id;
     });
 
-        //++++++++++++++
+    //ERROR CONNECTING WITH WEBRTC SIGNAL SERVER
+    peer.on("error", function (err) {
+      console.log("LOG: [EVENT=error] err=" + conn);
+    })
+
+    //INCOMING CALL REQUEST FROM REMOTE PEER_ID
+    peer.on("call", function (call) {
+      console.log("LOG: [EVENT=call] call=" + call);
+      //CONFIRM POPUP FOR ACCEPTING INCOMING CALLS
+      var acceptCall = confirm("do you want to answer this call?");
+      if (acceptCall) {
+        call.answer(window.localstream);
+        call.on("stream", function (stream) {
+          console.log("LOG: [EVENT=stream]");
+          window.peer_stream = stream;
+          recStream(stream, "local_video_id");
+        });
+        //CALL HANGED UP BY REMOTE PEER
+        call.on("close", function () {
+          alert("call is dropped!");
+          console.log("LOG: [EVENT=close]");
+        })
+
+      } else {
+        //CALL DENIED BY LOCAL PEER
+        alert("call denied!");
+        console.log("call denied");
+      }
+    });
+    //++++++++++++++
+    //SENDING CONNECTION REQUEST TO INPUT REMOTE PEER_ID
+    document.getElementById("conn_button").addEventListener("click", function () {
+      console.log("LOG: [EVENT=conn_button,click] connecting peername" + peername);
+      if (peername) {
+        conn = peer.connect(peername);
+      } else {
+        alert("enter an id");
+        return false;
+      }
+    });
+    //SENDING CALL TO REMOTE PEER_ID
+    document.getElementById("call_button").addEventListener("click", function () {
+      console.log("calling a peer!" + peer_id);
+      var call = peer.call(peer_id, window.localstream);
+
+      call.on("stream", function (stream) {
+        window.peer_stream = stream;
+        recStream(stream, "remote_video_id");
+      })
+    });
   </script>
 </body>
 
