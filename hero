@@ -4,7 +4,7 @@
 if [[ "${1}" == "1" ]]
 then
    echo "*** creating heroku app ***";
-   heroku create guti;
+   heroku create gutibaji2;
    git remote add heroku https://github.com/navidmostafiz/NMWebRTC.git
    exit 1;
 # DEPLOY AND START APP ON HEROKU
