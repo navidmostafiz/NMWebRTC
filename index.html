@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>TERMINAL-X-AUDIO</title>
+  <link rel="icon" type="image/x-icon"
+    href="https://iconarchive.com/download/i102472/sbstnblnd/plateau/Apps-config-language.ico" />
+  <style>
+    .fun {
+      border-radius: 0.25em;
+      border-style: solid;
+      border-width: 2px;
+      font-size: 1.5rem;
+      border-color: orangered;
+    }
+  </style>
+</head>
+
+<body>
+  <span class="fun" id="display_id"></span>
+  </br>
+  <span class="fun" id="peer_id"></span>
+  </br>
+  <video class="fun" id="local_video_id" width="100px" autoplay muted></video>
+  </br>
+  <video class="fun" id="remote_video_id" width="100px" autoplay></video>
+  </br>
+  <button class="fun" id="conn_button" onclick="callPEER()">Connect</button>
+  </br>
+  <button class="fun" id="call_button" onclick="callPEER()">Call</button>
+  </br>
+  <script src="https://unpkg.com/peerjs@1.3.0/dist/peerjs.min.js"></script>
+  <script>
+    //init setup
+    var username = "";
+    var peername = "";
+    // var token = "";
+
+    while (username == "" || username == null) {
+      getUserName();
+    }
+
+    while (peername == "" || peername == null) {
+      getPeerName();
+    }
+
+    // while (token == "" || token == null) {
+    //   getToken();
+    // }
+    //Get peername
+    function getPeerName() {
+      peername = prompt("peername?");
+      // alert(username);
+      console.log("LOG: peername=" + peername);
+    }
+    //Get username
+    function getUserName() {
+      username = prompt("username?");
+      // alert(username);
+      console.log("LOG: username=" + username);
+    }
+    //Get access token
+    // function getToken() {
+    //   token = prompt("access token?");
+    //   // alert(token);
+    //   console.log("LOG: token=" + token);
+    // }
+
+    //WebRTC connection
+
+    //GET LOCAL VIDEO
+    function getLocalVideo(callbacks) {
+      navigator.getUserMedia =
+        navigator.getUserMedia ||
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia;
+
+      navigator.getUserMedia({
+        audio: true,
+        video: true
+      }, callbacks.success, callbacks.error);
+    }
+
+    function recStream(stream, elemID) {
+      var video = document.getElementById(elemID);
+      video.srcObject = stream;
+      window.peer_stream = stream;
+    }
+
+    getLocalVideo({
+      success: function (stream) {
+        window.localstream = stream;
+        recStream(stream, "local_video_id");
+      },
+      error: function (err) {
+        alert("cannot access webcam");
+        console.log(err);
+      }
+    });
+
+    //+++++++++++++++ PEER SOCKET
+    const peer = new Peer(username, {
+      host: 'localhost',
+      port: 9000,
+      path: '/myapp'
+    });
+
+    peer.on('open', function (id) {
+      console.log('LOG: local PeerID=' + id);
+      document.getElementById("display_id").innerHTML = "local PeerID=  " + id;
+    });
+
+    peer.on('connection', function (conn) {
+      peer_id = conn.peer;
+      document.getElementById("display_id").innerHTML = "remote peer_id=  " + peer_id;
+
+
+      // conn.on('data', function (data) {
+      //   // Will print 'hi!'
+      //   console.log(data);
+      // });
+    });
+
+        //++++++++++++++
+  </script>
+</body>
+
+</html>

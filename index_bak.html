@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>TERMINAL-X-AUDIO</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://iconarchive.com/download/i102472/sbstnblnd/plateau/Apps-config-language.ico"
+    />
+  </head>
+
+  <body>
+    <h1>This is a Heading</h1>
+    <p>This is a paragraph.</p>
+    <button onclick="callPEER()">CALL PEER</button>
+
+    <script src="https://unpkg.com/peerjs@1.3.0/dist/peerjs.min.js"></script>
+    <script>
+      //init setup
+      var username = "";
+      var peername = "";
+      // var token = "";
+
+      while (username == "" || username == null) {
+        getUserName();
+      }
+
+      while (peername == "" || peername == null) {
+        getPeerName();
+      }
+
+      // while (token == "" || token == null) {
+      //   getToken();
+      // }
+      //Get peername
+      function getPeerName() {
+        peername = prompt("peername?");
+        // alert(username);
+        console.log("LOG: peername=" + peername);
+      }
+      //Get username
+      function getUserName() {
+        username = prompt("username?");
+        // alert(username);
+        console.log("LOG: username=" + username);
+      }
+      //Get access token
+      // function getToken() {
+      //   token = prompt("access token?");
+      //   // alert(token);
+      //   console.log("LOG: token=" + token);
+      // }
+      //WebRTC connection
+      var peer = new Peer([username]);
+      peer.on("open", function (id) {
+        console.log("LOG: uername peer ID=" + id);
+
+        peer.on("connection", function (conn) {
+          console.log("LOG: peer connected conn=" + conn);
+        });
+      });
+
+      function callPEER() {
+        console.log("LOG: callPEER() invoked!");
+
+        var conn = peer.connect(peername);
+        conn.on("open", function () {
+          // Receive messages
+          conn.on("data", function (data) {
+            console.log("Received", data);
+          });
+
+          // Send messages to peer
+          conn.send("Hello! from=" + username + "to=" + peername);
+        });
+      }
+      //+++++++++++++++
+    </script>
+  </body>
+</html>
